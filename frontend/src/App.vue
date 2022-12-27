@@ -64,7 +64,7 @@ const FoxRogueBlock = {
   name: "Fox Rogue",
   tagline: "An unaligned canid whose intentions are often mercurial",
   stats: new Stats("?", "?", "?", "?"),
-  ability: new Ability("Hydrophobia", "One bite", "Unknown")
+  ability: new Ability("Hydrophobia", "One bite, one kill", "Unknown")
 }
 
 const SpiderWizardBlock = {
@@ -88,10 +88,38 @@ const unaligned = [FoxRogueBlock];
 const enemies = [SpiderWizardBlock, SpiderFighterBlock];
 
 const focused = ref(null);
+const pinned = ref(null);
 
-function focus(blk) {
-  // alert(blk.stats.str)
+function $(q) {
+  return document.querySelector(q);
+}
+
+function $$(q) {
+  return [...document.querySelectorAll(q)];
+}
+
+function focus(blk, pin) {
+  if (!blk && pinned.value) {
+    focused.value = pinned.value;
+  }
+  if (pin) {
+    if (pinned.value) {
+      const img = $(`img[alt=${alt(pinned.value)}`);
+      img.classList.remove("pinned");
+    }
+    pinned.value = blk;
+    const img = $(`img[alt=${alt(pinned.value)}`);
+    img.classList.add("pinned");
+  }
   focused.value = blk;
+}
+
+function unfocus(blk) {
+  if (pinned.value && pinned.value.name != blk.name) {
+    const img = $(`img[alt=${alt(blk)}`);
+    img.classList.remove("pinned");
+    focused.value = pinned.value;
+  }
 }
 </script>
 
@@ -112,21 +140,21 @@ function focus(blk) {
       You will have multiple agents working for you, but you start with just one
     </div>
     <div class="images">
-      <img class='critter' @mouseover="focus(blk)" v-for="blk in classes" :src="blk.img" :alt="alt(blk)">
+      <img class='critter' @mouseover="focus(blk)" @mouseleave="unfocus(blk)" @click="focus(blk, true)" v-for="blk in classes" :src="blk.img" :alt="alt(blk)">
     </div>
     <h2>Meet the unaligned</h2>
     <div>
-      Some AIs are not managed by any players, but have their own goals
+      Some AIs are not managed by any players but have their own goals
     </div>
     <div class="images">
-      <img class='critter' @mouseover="focus(blk)" v-for="blk in unaligned" :src="blk.img" :alt="alt(blk)">
+      <img class='critter' @mouseover="focus(blk)" @mouseleave="unfocus(blk)" @click="focus(blk, true)" v-for="blk in unaligned" :src="blk.img" :alt="alt(blk)">
     </div>
     <h2>Defend the DragoVerse</h2>
     <div>
       Many AIs are beholden to the enemy, who seeks to destroy all non-machine interlopers
     </div>
     <div class="images">
-      <img class='critter' @mouseover="focus(blk)" v-for="blk in enemies" :src="blk.img" :alt="alt(blk)">
+      <img class='critter' @mouseover="focus(blk)" @mouseleave="unfocus(blk)" @click="focus(blk, true)" v-for="blk in enemies" :src="blk.img" :alt="alt(blk)">
     </div>
   </main>
 </template>
@@ -144,8 +172,11 @@ header {
 .tagline {
   margin-bottom: 2rem;
 }
-.critter:hover {
+.critter:hover, .images img.pinned {
   border: 0.2rem solid var(--color-border-hover);
+}
+h1, h2 {
+  color: var(--color-heading);
 }
 img[alt=PigClass] {
   background: linear-gradient(0deg, #fac4b1, #c9a568);
